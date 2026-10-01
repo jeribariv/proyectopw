@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InventarioPro - Acceso</title>
+    <link rel="stylesheet" href="plantilla/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-5">
+                <!-- Alerta superior para mensajes del sistema -->
+                <div id="mensajes">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        Bienvenido. Ingrese sus credenciales.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h1 class="text-center fw-light">Acceso</h1>
+                        <div class="text-center mb-4">
+                            <span class="badge rounded-pill bg-primary">Control de Usuarios</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="email">Correo / Usuario</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" id="email" class="form-control" placeholder="usuario@dominio.com">
+                                <div class="invalid-feedback">Ingrese un correo válido.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="clave">Contraseña</label>
+                            <input type="password" id="clave" class="form-control" placeholder="••••••••">
+                            <div class="invalid-feedback">Ingrese su contraseña.</div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="recordar">
+                            <label class="form-check-label" for="recordar">Recordar sesión en este equipo</label>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="button" id="entrar" class="btn btn-primary">Ingresar al Panel</button>
+                        </div>
+
+                        <div class="text-center">
+                            <a href="registro.html" class="d-block mb-2">Registrar Nueva Cuenta</a>
+                            <a href="#" id="olvide">Olvidé mi contraseña</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="plantilla/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        $('email').value = localStorage.getItem('usuarioRecordado') || '';
+        $('recordar').checked = !!$('email').value;
+        $('olvide').onclick = e => { e.preventDefault(); alerta('warning', 'Contacte al administrador del sistema para restablecer su contraseña.'); };
+
+        $('entrar').onclick = async () => {
+            const email = $('email').value.trim(), clave = $('clave').value;
+            const ok = marcar('email', /^\S+@\S+\.\S+$/.test(email)) & marcar('clave', clave.length > 0);
+            if (!ok) return;
+            try {
+                await api('api/auth.php?accion=login', 'POST', { email, clave });
+                if ($('recordar').checked) localStorage.setItem('usuarioRecordado', email);
+                else localStorage.removeItem('usuarioRecordado');
+                location.href = 'dashboard.html';
+            } catch (e) { alerta('danger', e.message); }
+        };
+        [$('email'), $('clave')].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') $('entrar').click(); }));
+    </script>
+</body>
+</html>

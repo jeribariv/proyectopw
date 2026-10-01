@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InventarioPro - Usuarios</title>
+    <link rel="stylesheet" href="plantilla/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <nav aria-label="breadcrumb" id="migas"></nav>
+        <div id="mensajes"></div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="h2 fw-bold mb-0">Usuarios</h1>
+            <a href="dashboard.html" class="btn btn-outline-secondary">Volver al Panel</a>
+        </div>
+
+        <div class="card shadow-sm"><div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th></th></tr></thead>
+                <tbody id="tabla"></tbody>
+            </table>
+        </div></div>
+    </div>
+
+    
+
+    <div class="modal fade" id="modalBorrar" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Eliminar usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">¿Eliminar a <strong id="nombreBorrar"></strong>?</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-danger" id="confirmarBorrar">Eliminar</button>
+            </div>
+        </div></div>
+    </div>
+
+    <script src="plantilla/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        migas([['Panel de Control', 'dashboard.html'], ['Usuarios']]);
+        let lista = [], yo, idBorrar, mBorrar;
+
+        async function cargar() {
+            try {
+                lista = await api('api/usuarios.php');
+                $('tabla').innerHTML = lista.map(u => {
+                    const mio = u.id == yo.id;
+                    return `<tr><td>${esc(u.nombre)}</td><td>${esc(u.email)}</td>
+                    <td><span class="badge bg-${u.rol === 'admin' ? 'primary' : 'secondary'} me-2">${u.rol}</span>
+                        <select class="form-select form-select-sm d-inline-block w-auto" ${mio ? 'disabled' : ''}
+                                onchange="cambiarRol(${u.id}, this.value)">
+                            <option value="usuario" ${u.rol === 'usuario' ? 'selected' : ''}>usuario</option>
+                            <option value="admin" ${u.rol === 'admin' ? 'selected' : ''}>admin</option>
+                        </select></td>
+                    <td class="text-end">${mio ? '' : `<button class="btn btn-sm btn-outline-danger" onclick="pedirBorrar(${u.id})">Eliminar</button>`}</td></tr>`;
+                }).join('');
+            } catch (e) { alerta('danger', e.message); }
+        }
+        async function cambiarRol(id, rol) {
+            try { await api('api/usuarios.php', 'PUT', { id, rol }); alerta('success', 'Rol actualizado.'); }
+            catch (e) { alerta('danger', e.message); }
+            cargar();
+        }
+        function pedirBorrar(id) { idBorrar = id; $('nombreBorrar').textContent = lista.find(u => u.id == id).nombre; mBorrar.show(); }
+        $('confirmarBorrar').onclick = async () => {
+            try { await api('api/usuarios.php?id=' + idBorrar, 'DELETE'); alerta('success', 'Usuario eliminado.'); cargar(); }
+            catch (e) { alerta('danger', e.message); }
+            mBorrar.hide();
+        };
+
+        (async () => {
+            try {
+                yo = await sesion();
+                if (yo.rol !== 'admin') { alerta('warning', 'Solo los administradores pueden gestionar usuarios.'); return; }
+                mBorrar = new bootstrap.Modal($('modalBorrar'));
+                cargar();
+            } catch (e) { alerta('danger', e.message); }
+        })();
+    </script>
+</body>
+</html>

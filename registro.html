@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InventarioPro - Registro de Usuario</title>
+    <link rel="stylesheet" href="plantilla/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <!-- Breadcrumb superior -->
+                <nav aria-label="breadcrumb" id="migas"></nav>
+
+                <div id="mensajes">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                        Complete el formulario para crear un nuevo usuario y acceder al sistema.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-body p-4">
+                        <h1 class="text-center h2 fw-bold">Crear Nueva Cuenta</h1>
+                        <div class="text-center mb-4"><span class="badge rounded-pill bg-success">Nuevo Usuario</span></div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="nombres">Nombres</label>
+                                <input type="text" id="nombres" class="form-control" placeholder="Juan">
+                                <div class="invalid-feedback">Ingrese sus nombres (mínimo 2 caracteres).</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="apellidos">Apellidos</label>
+                                <input type="text" id="apellidos" class="form-control" placeholder="Pérez">
+                                <div class="invalid-feedback">Ingrese sus apellidos (mínimo 2 caracteres).</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="email">Correo Electrónico</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" id="email" class="form-control" placeholder="usuario@dominio.com">
+                                <div class="invalid-feedback">Ingrese un correo válido.</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="clave">Contraseña</label>
+                                <input type="password" id="clave" class="form-control" placeholder="••••••••">
+                                <div class="invalid-feedback">Mínimo 6 caracteres.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="clave2">Confirmar Contraseña</label>
+                                <input type="password" id="clave2" class="form-control" placeholder="••••••••">
+                                <div class="invalid-feedback">Las contraseñas no coinciden.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="terminos" required>
+                            <label class="form-check-label" for="terminos">Acepto los términos y condiciones del sistema</label>
+                            <div class="invalid-feedback">Debe aceptar los términos y condiciones.</div>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="button" id="registrar" class="btn btn-success">Registrar Cuenta</button>
+                        </div>
+
+                        <hr>
+                        <p class="text-center mb-0">¿Ya tienes una cuenta? <a href="index.html" class="fw-bold">Iniciar Sesión</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="plantilla/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        migas([['Inicio', 'login.html'], ['Login', 'login.html'], ['Registro de Usuario']]);
+
+        $('registrar').onclick = async () => {
+            const nombres = $('nombres').value.trim(), apellidos = $('apellidos').value.trim();
+            const email = $('email').value.trim(), clave = $('clave').value;
+            const ok = marcar('nombres', nombres.length >= 2) & marcar('apellidos', apellidos.length >= 2)
+                     & marcar('email', /^\S+@\S+\.\S+$/.test(email)) & marcar('clave', clave.length >= 6)
+                     & marcar('clave2', $('clave2').value === clave) & marcar('terminos', $('terminos').checked);
+            if (!ok) return;
+            try {
+                await api('api/auth.php?accion=registro', 'POST', { nombres, apellidos, email, clave, terminos: true });
+                alerta('success', 'Cuenta creada. Redirigiendo al acceso...');
+                setTimeout(() => location.href = 'login.html', 1500);
+            } catch (e) { alerta('danger', e.message); }
+        };
+    </script>
+</body>
+</html>
